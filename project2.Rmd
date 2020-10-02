@@ -1,0 +1,20 @@
+---
+title: "Porject 2 - Data Transformation"
+author: "Peter"
+date: "10/2/2020"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(DT)
+```
+
+
+# Dataset1(Student residency) by Donghwan Kim
+
+
