@@ -1,20 +1,147 @@
 ---
-title: "Porject 2 - Data Transformation"
-author: "Peter"
+title: "Porject 2 - Data Transformation- Dataset1"
+author: "Peter/ Arushi"
 date: "10/2/2020"
 output: html_document
 ---
 
+Contributors:
+              
+                 Peter Fernandes
+                 Arushi Arora
+              
+# Introduction
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyr)
-library(dplyr)
-library(ggplot2)
-library(DT)
+Project 2 requires to create 3 tidy datasets by either using the untidy datasets from week5 discussion or choose any of our own dataset. It requires the data set to be wide and untidy so that we read the data from a CSV and transform and tidy the datasets. we have used 3 of the datasets from the discussion and tried to transform and tidy the data. We have analysed the data over plots using the ggplot library.
+
+### Dataset1(Student residency) by Donghwan Kim
+
+--------------------------------------------------------------------------------------
+
+![](numStudentsResidency.png)
+
+--------------------------------------------------------------------------------------
+
+**Analysis:**
+
+    Analyze Class rank based on state of resideny and campus type 
+
+### Loading of the required packages
+
+```{r global_options, warning=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = FALSE, 
+                      fig.show = "hide", message = FALSE)
+if (!require("tidyr")) install.packages('tidyr')
+if (!require("dplyr")) install.packages('dplyr')
+if (!require("DT")) install.packages('DT')
+if (!require("ggplot2")) install.packages('ggplot2')
 ```
 
+### Reading untidy dataset
 
-# Dataset1(Student residency) by Donghwan Kim
+Columns or Rows having Total have been excluded in the dataset and wherever required total has been calculated programatically. Even we add it those will have to be neglected and this functionality of column exclusion is already shown in this example.  
+
+Created CSV has been uploaded on GitHub and read into R
+
+```{r}
+data <- read.csv("https://raw.githubusercontent.com/petferns/607-Project2/main/studentsresidency.csv", na.strings = c("", "NA"))
+head(data)
+```
+
+### Null values
+
+We see from the above data that row 3 needs to be excluded since it as all NULL values
+
+```{r}
+data <- data[!apply(is.na(data[1:5]),1,all), ]
+head(data)
+```
+### Exclude irrelevant column
+
+
+Class Rank column has to be excluded since the next column has the actual rank value.
+
+```{r}
+data[2]<- list(NULL)
+head(data)
+
+```
+### Rename Column headers
+
+Column headers for first and second will be renamed to Residency and Class Rank respectively.
+
+```{r}
+names(data)[1] <- "Residency"
+names(data)[2] <- "Class Rank"
+head(data)
+```
+### Fill the missing values
+
+Missing values for Residency column will be filled accordingly.
+Row2 will be filled with In state and Row5 with Out of state considering the row value one above it.
+
+```{r}
+for(i in 2:nrow(data)) {
+  
+  if(is.na(data$Residency[i])){
+    data$Residency[i] <- data$Residency[i-1]
+  }
+}
+head(data)
+```
+### Wide to long
+
+We create a long structure from the existing wide data by converting the column 3 and 4 into Campus type and count accordingly.
+
+```{r}
+wide_to_long <- gather(data, "Campus Type", "Count", 3:4)
+head(wide_to_long)
+```
+
+### Let us now apply spread function on Class Rank column so that each distinct value becomes a column
+
+```{r}
+transformed <- spread(wide_to_long,`Class Rank`,Count)
+transformed
+```
+### Analysis and plotting
+
+#### Class Rank over State of residence 
+
+We see higher Under and Over class in In-state residence. The class rank doesn't really depend on state of residence as per our analysis.
+
+```{r fig.show='asis'}
+overall_under <- transformed %>% group_by(Residency) %>% summarize(avg_Underclassman = mean(`Underclassman`))
+head(overall_under)
+ggplot(overall_under ,aes(x= Residency, y=avg_Underclassman, fill=Residency)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+overall_upper <- transformed %>% group_by(Residency) %>% summarize(avg_Upperclassman = mean(`Upperclassman`))
+head(overall_upper)
+ggplot(overall_upper ,aes(x= Residency, y=avg_Upperclassman, fill=Residency)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+
+```
+
+#### Class Rank over Campus type 
+
+From the Class rank over campus type plotting we see the Upperclass man are higher in off-campus and also Underclass man are lower in off-campus.
+
+We can conclude that off-campus should be more preferred than on-campus based on our analysis.
+
+```{r fig.show='asis'}
+overall_under <- transformed %>% group_by(`Campus Type`) %>% summarize(avg_Underclassman = mean(`Underclassman`))
+head(overall_under)
+ggplot(overall_under ,aes(x= `Campus Type`, y=avg_Underclassman, fill=`Campus Type`)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+overall_upper <- transformed %>% group_by(`Campus Type`) %>% summarize(avg_Upperclassman = mean(`Upperclassman`))
+head(overall_upper)
+ggplot(overall_upper ,aes(x= `Campus Type`, y=avg_Upperclassman, fill=`Campus Type`)) +
+    geom_bar(stat="identity", position=position_dodge())
+
+```
+
 
 

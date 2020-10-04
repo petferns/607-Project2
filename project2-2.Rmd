@@ -1,0 +1,109 @@
+---
+title: "Porject 2 - Data Transformation- Dataset2"
+authors: "Peter/ Arushi"
+date: "10/2/2020"
+output: html_document
+---
+
+Contributors:
+              
+                 Peter Fernandes
+                 Arushi Arora 
+# Introduction
+
+Project 2 requires to create 3 tidy datasets by either using the untidy datasets from week5 discussion or choose any of our own dataset. It requires the data set to be wide and untidy so that we read the data from a CSV and transform and tidy the datasets. we have used 3 of the datasets from the discussion and tried to transform and tidy the data. We have analysed the data over plots using the ggplot library.
+
+### Dataset2 (NYC per-capita fuel consumption and CO2 emissions) by Peter Fernandes
+
+--------------------------------------------------------------------------------------
+
+![](discussion.png)
+
+--------------------------------------------------------------------------------------
+  
+**Analysis :** 
+  
+             Calculate the average of energy consumption and CO2 emissions.
+
+### Loading of the required packages
+
+```{r global_options, warning=FALSE}
+knitr::opts_chunk$set(eval = TRUE, results = FALSE, 
+                      fig.show = "hide", message = FALSE)
+if (!require("tidyr")) install.packages('tidyr')
+if (!require("dplyr")) install.packages('dplyr')
+if (!require("stringr")) install.packages('stringr')
+if (!require("DT")) install.packages('DT')
+if (!require("ggplot2")) install.packages('ggplot2')
+```
+
+### Reading untidy dataset
+
+```{r}
+csv <- read.csv("https://raw.githubusercontent.com/petferns/607-Project2/main/energy.csv", na.strings = c("", "NA"))
+head(csv)
+```
+### Renaming of the columns
+
+```{r}
+names(csv)[1] <- "Category"
+names(csv)[2] <- "Building and industry consumption"
+names(csv)[3] <- "Building and industry Emission"
+names(csv)[4] <- "Transportation consumption"
+names(csv)[5] <- "Transportation Emission"
+head(csv)
+```
+### Exclude non required rows
+
+```{r}
+
+csv <- csv[-c(1),]
+csv
+```
+### Add Counties column to make it wide
+
+```{r}
+csv$Counties <-  gsub(".*\\(+(.*)+\\)","\\1",csv$Category)
+csv
+```
+### Convert into large from wide dataset based on column 2 to 5
+
+
+```{r}
+csv1<- csv %>% gather("Type", "Count", 2:5)
+csv1
+``` 
+
+### Create a extra column to identify if Consumption or Emission
+
+```{r}
+csv1$Utils <- sub("^.+ ", "", csv1$Type)
+
+csv1$Division <- str_extract(csv1$Type, "[^ ]+")
+csv1$Division
+```
+### Analyze and create plot
+
+We see the consumption and emission average across different segments using the below plot
+
+```{r fig.show='asis'}
+csv1$Count <- as.numeric(csv1$Count)
+overall_dt <- csv1 %>% group_by(Category, Type) %>% mutate(overall_avg = mean(`Count`))
+overall_dt
+ggplot(overall_dt ,aes(x=  Type, y=overall_avg, fill= Type)) +
+    geom_bar(stat="identity", position=position_dodge()) + theme(axis.text.x = element_text(angle = 90))
+
+```
+
+### Analyse and plot the required result - Overal Consumption and Emission
+
+**We see from the analysis and plotting that the overall consumption is much higher than the Emissions across NY.**
+
+```{r fig.show='asis'}
+
+overall_dt <- csv1 %>% group_by(Utils) %>% mutate(overall_avg = mean(`Count`))
+overall_dt
+ggplot(overall_dt ,aes(x=  Utils, y=overall_avg, fill= Utils)) +
+    geom_bar(stat="identity", position=position_dodge()) + theme(axis.text.x = element_text(angle = 90))
+
+```
