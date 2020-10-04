@@ -1,0 +1,72 @@
+---
+title: "Project 02"
+author: "Arushi Arora / Peter Fernandes"
+date: "10/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+Contributors:
+              
+              ** Peter Fernandes
+                 Arushi Arora **
+
+# Introduction
+
+Project 2 requires to create 3 tidy datasets by either using the untidy datasets from week5 discussion or choose any of our own dataset. It requires the data set to be wide and untidy so that we read the data from a CSV and transform and tidy the datasets. we have used 3 of the datasets from the discussion and tried to transform and tidy the data. We have analysed the data over plots using the ggplot library.
+
+# Import and Rename Variables in Federal Spending Data
+
+```{r}
+# Read the csv file from GitHub with the table data
+# Rename the columns to make them easier to use
+df <- read.csv("https://raw.githubusercontent.com/Araisedtotwo/Project02/main/DataUSACart.csv", header = TRUE) %>%
+  as_tibble() %>%
+  rename(id = ID.Geography , 
+         agencyid= ID.Agency ,
+         amount = Obligation.Amount..2017.) %>%
+  print()
+# 6557 obs and 5 vars
+```
+
+## Clean data
+
+```{r}
+# Remove amounts that are in -ve
+df1 <- df %>%
+  filter(amount > 0) %>%
+  print()
+# 6158 obs and 5 vars
+```
+
+## Let us sort data by spending amount and look at the summary of all variables
+```{r}
+df2 <- df1 %>%
+  arrange(amount)
+summary(df2)
+```
+
+## Calculate the overall avg spending by State 
+
+```{r}
+state_spending <- df2 %>% group_by(Geography) %>% summarize(avg_state = mean(amount)) %>%
+  arrange(avg_state, Geography)
+head(state_spending)
+# Wyoming has the highest Federal Spending at $14,977,226
+```
+
+## ## Calculate the overall avg spending by Agency 
+
+```{r}
+agency_spending <- df2 %>% group_by(Agency) %>% summarize(avg_agency = mean(amount)) %>%
+  arrange(avg_agency, Agency)
+head(agency_spending)
+# Office of the Under Secretary of the Interior at $20,000 is the highest spending agency
+```
+
+
